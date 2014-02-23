@@ -1,0 +1,606 @@
+# -*- org-babel-tangled-file: t; org-babel-tangle-run-postTangleScript: t; -*-
+
+#+TITLE:     TSS Statistic
+#+AUTHOR:    Rainer M Krug
+#+EMAIL:     Rainer@krugs.de
+#+DESCRIPTION: Package to implement basic and extended TSS
+#+KEYWORDS: 
+
+:CONFIG:
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+
+#+TODO: TODO OPTIMIZE TOGET COMPLETE WAIT VERIFY CHECK CODE DOCUMENTATION | DONE RECEIVED CANCELD 
+
+#+STARTUP: indent hidestars nohideblocks
+#+DRAWERS: HIDDEN PROPERTIES STATE CONFIG BABEL OUTPUT LATEXHEADER HTMLHEADER
+#+STARTUP: nohidestars hideblocks
+:END:
+:HTMLHEADER:
+#+begin_html
+  <div id="subtitle" style="float: center; text-align: center;">
+  <p>
+Org-babel support for building 
+  <a href="http://www.r-project.org/">R</a> packages
+  </p>
+  <p>
+  <a href="http://www.r-project.org/">
+  <img src="http://www.r-project.org/Rlogo.jpg"/>
+  </a>
+  </p>
+  </div>
+#+end_html
+:END:
+:LATEXHEADER:
+#+LATEX_HEADER: \usepackage{rotfloat}
+#+LATEX_HEADER: \definecolor{light-gray}{gray}{0.9}
+#+LATEX_HEADER: \lstset{%
+#+LATEX_HEADER:     basicstyle=\ttfamily\footnotesize,       % the font that is used for the code
+#+LATEX_HEADER:     tabsize=4,                       % sets default tabsize to 4 spaces
+#+LATEX_HEADER:     numbers=left,                    % where to put the line numbers
+#+LATEX_HEADER:     numberstyle=\tiny,               % line number font size
+#+LATEX_HEADER:     stepnumber=0,                    % step between two line numbers
+#+LATEX_HEADER:     breaklines=true,                 %!! don't break long lines of code
+#+LATEX_HEADER:     showtabs=false,                  % show tabs within strings adding particular underscores
+#+LATEX_HEADER:     showspaces=false,                % show spaces adding particular underscores
+#+LATEX_HEADER:     showstringspaces=false,          % underline spaces within strings
+#+LATEX_HEADER:     keywordstyle=\color{blue},
+#+LATEX_HEADER:     identifierstyle=\color{black},
+#+LATEX_HEADER:     stringstyle=\color{green},
+#+LATEX_HEADER:     commentstyle=\color{red},
+#+LATEX_HEADER:     backgroundcolor=\color{light-gray},   % sets the background color
+#+LATEX_HEADER:     columns=fullflexible,  
+#+LATEX_HEADER:     basewidth={0.5em,0.4em}, 
+#+LATEX_HEADER:     captionpos=b,                    % sets the caption position to `bottom'
+#+LATEX_HEADER:     extendedchars=false              %!?? workaround for when the listed file is in UTF-8
+#+LATEX_HEADER: }
+:END:
+:BABEL:
+#+PROPERTY: exports code
+#+PROPERTY: comments yes
+#+PROPERTY: padline no
+#+PROPERTY: mkdirp yes
+#+PROPERTY: var MAJORVERSION=0
+#+PROPERTY: var+ MINORVERSION=1
+#+PROPERTY: var+ PATCHVERSION=0
+#+PROPERTY: var+ GITHASH="testhash" 
+#+PROPERTY: var+ GITCOMMITDATE="testdate"
+:END:
+
+* Internal configurations                      :noexport:
+** Evaluate to run post tangle script
+#+begin_src emacs-lisp :results silent :tangle no :exports none
+  (add-hook 'org-babel-post-tangle-hook
+            (
+             lambda () 
+                    (call-process-shell-command "./postTangleScript.sh" nil 0 nil)
+  ;;              (async-shell-command "./postTangleScript.sh")
+  ;;              (ess-load-file (save-window-excursion (replace-regexp-in-string ".org" ".R" buffer-file-name)))))
+  ;;              (ess-load-file "nsa.R")))
+  ;;              (ess-load-file "spreadSim.R")
+                    )
+            )
+#+end_src
+
+** Post tangle script
+#+begin_src sh :results output :tangle ./postTangleScript.sh :var VER=(vc-working-revision (buffer-file-name)) :var STATE=(vc-state (or (buffer-file-name) org-current-export-file))
+sed -i '' s/MAJORVERSION/$MAJORVERSION/ ./DESCRIPTION
+sed -i '' s/MINORVERSION/$MINORVERSION/ ./DESCRIPTION
+sed -i '' s/PATCHVERSION/$PATCHVERSION/ ./DESCRIPTION
+sed -i '' s/TODAYSDATE/`date +%Y-%m-%d_%H-%M`/ ./DESCRIPTION
+
+sed -i '' s/MAJORVERSION/$MAJORVERSION/ ./R/package.R
+sed -i '' s/MINORVERSION/$MINORVERSION/ ./R/package.R
+sed -i '' s/PATCHVERSION/$PATCHVERSION/ ./R/package.R
+sed -i '' s/TODAYSDATE/`date +%Y-%m-%d_%H-%M`/ ./R/package.R
+
+Rscript -e "library(roxygen2);roxygenize('.', copy.package=FALSE, unlink.target=FALSE)"
+rm -f ./postTangleScript.sh
+#+end_src
+
+* gitignore file (./.gitignore)
+:PROPERTIES:
+:tangle: ./.gitignore
+:comments: no
+:no-expand: TRUE
+:shebang:
+:padline: no
+:END: 
+#+begin_src gitignore
+.#*
+#*
+,*#
+,*~
+,*#TSS.*
+TSS.*
+!TSS.org*
+TSS.org~
+,*.o
+,*.so
+,*.rds                                                                                                                                                                                                                                                                                                                                                                                                     
+#+end_src
+
+* Git Revision info
+Complete version info
+#+begin_src sh :exports results :results output replace 
+  echo "Version     : " $MAJORVERSION.$MINORVERSION-$PATCHVERSION
+  echo "Commit date : " `git show -s --format="%ci" HEAD`
+  echo "git HASH    : " `git rev-parse HEAD`
+  echo "git status  : "
+  git status
+#+end_src
+
+#+RESULTS:
+: Version     :  0.1-0
+: Commit date :  2014-02-23 15:58:27 +0100
+: git HASH    :  6d29ee908f182cd0f68c0bccb227dcb9f47d55d9
+: git status  : 
+: # On branch master
+: nothing to commit, working directory clean
+
+
+
+* Rbuildignore file (./.Rbuildignore)
+:PROPERTIES:
+:tangle: ./.Rbuildignore
+:comments: no
+:no-expand: TRUE
+:shebang:
+:padline: no
+:END: 
+#+begin_src fundamental
+.git  
+^.*\\.org$
+.gitignore
+library
+version
+postTangleScript.sh
+#+end_src
+
+
+
+* Package Files
+** DESCRIPTION
+:PROPERTIES:
+:tangle:   ./DESCRIPTION
+:padline: no 
+:no-expand: TRUE
+:comments: no
+:END:
+#+begin_src fundamental
+Package: TSS
+Type: Package
+Title: Basic and extended TSS Statistics (True Skill Statistics)
+Version: MAJORVERSION.MINORVERSION-PATCHVERSION
+Date: TODAYSDATE
+Author: Rainer M. Krug
+Maintainer: Rainer M Krug <Rainer@krugs.de>
+Description: This packag implements the True Skills Statistic (TSS) as well as extensions
+License: GPL-3
+LazyLoad: yes
+#+end_src
+
+** NAMESPACE
+:PROPERTIES:
+:tangle:   ./NAMESPACE
+:padline: no 
+:no-expand: TRUE
+:comments: no
+:END:
+#+begin_src R
+  # useDynLib(fireSim)
+  exportPattern("^[[:alpha:]]+")
+#+end_src
+
+#+results:
+
+** Package description (./R/package.R)
+
+:PROPERTIES:
+:tangle:   ./R/package.R
+:eval: nil
+:no-expand: TRUE
+:comments: no
+:END:
+#+begin_src R 
+##' Basic and extended True Skills Statistics (TSS)
+##'
+##' TSS is an index of the goodness-of- fit allowing to assess a how
+##' much a continuous variable simulated by any model fit
+##' presence/absence data. It thus allows to translate a map of any
+##' continuous variable into a map of presence/absence for a given set
+##' of spatial simulations. This is made possible by finding the
+##' threshold value of the continuous variable.
+##'
+##' The TSS function loops over a wide range of threshold values and
+##' returns indicator values, which can be used toi identify the most
+##' suitable threshold value.
+##' 
+##' \tabular{ll}{
+##' Package: \tab TSS\cr
+##' Type: \tab Package\cr
+##' Version: \tab  MAJORVERSION.MINORVERSION.PATCHVERSION\cr
+##' Date: \tab TODAYSDATE\cr
+##' License: \tab GPL (>= 2)\cr
+##' LazyLoad: \tab yes\cr
+##' }
+##'
+##' @name TSS-package
+##' @docType package
+##' @author Rainer M Krug \email{Rainer@@krugs.de}
+NULL
+#+end_src
+
+* R directory (./R)
+** Simple TSS 
+:PROPERTIES:
+:tangle:   ./R/TSSSimple.R
+:no-expand: TRUE
+:comments: yes
+:END:
+Extended to include evaluation of =tresh= range
+#+begin_src R
+##' True skill statistic (TSS) Function
+##' 
+##' TSS is an index of the goodness-of- fit allowing to assess 
+##' a how much a continuous variable simulated by any model fit presence ??? absence data.
+##' It thus allows to translate a map of any continuous variable into a map of  presence/absence 
+##' for a given set of spatial simulation at the species level.
+##' This is made possible by finding the threshold value of the 
+##' continuous variable used as a procxy of fitness (e.g. growth, productivity..) 
+##' Therefore One must loop the function over a wide range of threshold to find the optimal one.
+##' Note that cont and vec ref must match spatially (same ranking and same size)
+##' 
+##' @title True skill statistic
+##' @param cont \code{vector} of simulation of any continuous variable which has been choosen as a proxy of fitness
+##' @param presAbs \code{vector} of presence/absence data, can be logical
+##' @param thresh \code{vector} containig the reshold value in the same unit as cont
+##' @param largerPres if \code{TRUE} the \code{cont} values larger
+##' then the threshold are considered as presence, if \code{FALSE}
+##' smaller values.
+##' @return A TSS object
+##' @author Rainer M. Krug \email{Rainer@@krugs.de}
+##'
+##' @export
+TSSSingle <- function(
+    cont,
+    presAbs,
+    thresh,
+    largerPres = TRUE
+    ) {
+    presAbs <- as.logical(presAbs)
+    ## exclude where cont pr verref is NA
+    sel <- (!is.na(cont)) & (!is.na(presAbs))
+    cont <- cont[sel]
+    presAbs <- presAbs[sel]
+    ##
+    result <- sapply(
+        thresh,
+        function(tr) {
+
+            ## Classify cont into absence (< tr) and presence (>= tr)
+            if (largerPres) {
+                vecCont <- cont >= tr
+            } else {
+                vecCont <- cont <= tr
+            }
+            ## Presence predicted and Present
+            pP <- sum(   vecCont  &   presAbs  )
+            ## Presence predicted but Absent
+            pA <- sum(   vecCont  & (!presAbs) )
+            ## Absence predicted but Presence
+            aP <- sum( (!vecCont) &   presAbs  )
+            ## Absence predicted and Absent
+            aA <- sum( (!vecCont) & (!presAbs) )
+            
+            ## Sensitivity
+            Sens <- pP / (pP + aP)
+            
+            ## Specificity
+            Spe <- aA / (aA + pA)
+            
+            ## TSS
+            TSS <- Sens + Spe - 1
+            
+            result=c(tr, NA, Sens, Spe, TSS, pP, pA, aA, aP)
+            return(result)
+        }
+        )
+    result <- as.data.frame(t(result))
+    names(result) <- c("threshold1", "threshold2", "sensitivity", "specificity", "tss", "pP", "pA", "aA", "aP")
+    class(result) <- "TSS"
+    attr(result, "link") <- NA
+    attr(result, "largerPres1") <- largerPres
+    attr(result, "largerPres2") <- NA
+    attr(result, "threshold1") <- thresh
+    attr(result, "threshold2") <- NA
+    attr(result, "dimension") <- 1
+    return(result)
+}
+#+end_src
+
+** TSS
+:PROPERTIES:
+:tangle:   ./R/TSS.R
+:no-expand: TRUE
+:comments: yes
+:END:
+Extending the TSS to two continuous input variables.  The reasoning is
+to see if the prediction of presence/absence could be improved by
+using two input variables, i.e. including interaction effects.
+
+#+begin_src R
+##' True skill statistic (TSS) Function
+##' 
+##' TSS is an index of the goodness-of- fit allowing to assess a how
+##' much a continuous variable simulated by any model fit
+##' presence/absence data.  It thus allows to translate a map of any
+##' continuous variable into a map of presence/absence for a given set
+##' of spatial simulation at the species level.  This is made possible
+##' by finding the threshold value of the continuous variable used as
+##' a procxy of fitness (e.g. growth, productivity..).
+##'
+##' This version extends the function \code{TSS} to using two
+##' continuous variables (\code{cont1} and \code{cont2}) and two
+##' thresholds (\code{thres1} and \code{thresh2}) to predict \code{presAbs}
+##'
+##' If \code{largerPres1==TRUE} and code{largerPres2==TRUE} the system
+##' represents facilitation, while \code{largerPres1==TRUE} and
+##' code{largerPres2==FALSE} represents competition.
+##'
+##' If \code{is.null(cont2)} the function returns the normal default
+##' TSS.
+##' 
+##' Note that \code{cont1} and \code{verref} must match spatially (same ranking and
+##' same size)
+##' 
+##' @title True skill statistic
+##' @param cont1 \code{vector} of simulation of any continuous variable
+##' which has been choosen as a primary proxy of fitness
+##' @param cont2 \code{vector} of simulation of any continuous variable
+##' which has been choosen as a secondary proxy of fitness. If \code{is.null(cont2)}, a simple TSS is calculated.
+##' @param presAbs \code{vector} of presence/absence data, can be logical
+##' @param thresh1 \code{vector} containig the threshold values for \code{cont1} 
+##' @param thresh2 \code{vector} containig the threshold values for \code{cont2}
+##' @param largerPres1 if \code{TRUE}, \code{cont1} values larger then
+##' the threshold specify presence, if \code{FALSE} \code{cont1}
+##' values smaller. 
+##' @param largerPres2 if \code{TRUE}, \code{cont2} values larger then
+##' the threshold specify presence, if \code{FALSE} \code{cont2}
+##' values smaller. 
+##' @param link a \bold{vectorised} function returning a
+##' \code{logical} vector of the same length as the \bold{exactly two}
+##' \code{logical} input vectors. The default is the function
+##' \code{&}. It has to be specified using backquotes (i.e. "`&`" or
+##' "`|`").
+##' @return An object of class \code{TSS} TODO
+##' @author Rainer M. Krug \email{Rainer@@krugs.de}
+##'
+##' @export
+TSS <- function(
+    cont1,
+    cont2 = NULL,
+    presAbs,
+    thresh1,
+    thresh2,
+    largerPres1 = TRUE,
+    largerPres2 = FALSE,
+    link = `&`
+    ) {
+    presAbs <- as.logical(presAbs)
+    if (is.null(cont2)) {
+        sel <- (!is.na(cont1)) & (!is.na(presAbs))
+        cont1 <- cont1[sel]
+        presAbs <- presAbs[sel]
+        thresh2 <- NA
+    } else {
+        sel <- (!is.na(cont1)) & (!is.na(cont2)) & (!is.na(presAbs))
+        cont1 <- cont1[sel]
+        cont2 <- cont2[sel]
+        presAbs <- presAbs[sel]
+    }
+    ##
+    result <- sapply(
+        thresh1,
+        function(tr1) {
+            result <- sapply(
+                thresh2,
+                function(tr2) {
+                    ## Classify cont1 and cont2 into absence (< tr)
+                    ## and presence (>= tr) depending on largerPres1
+                    ## and largerPres2
+                    if (largerPres1) {
+                        vecCont1 <- cont1 >= tr1
+                    } else {
+                        vecCont1 <- cont1 <= tr1                        
+                    }
+                    if (!is.null(cont2)) {
+                        if (largerPres2) {
+                            vecCont2 <- cont2 >= tr2
+                        } else {
+                            vecCont2 <- cont2 <= tr2                        
+                        }
+                        ## Combine vecCont1 and vecCont2 using "link"
+                        vecCont <- link(vecCont1, vecCont2)
+                    } else {
+                        vecCont <- vecCont1
+                    }
+                    ## Presence predicted and Present
+                    pP <- sum(   vecCont &    presAbs  )
+                    ## Presence predicted but absent
+                    pA <- sum(   vecCont  & (!presAbs) )
+                    ## Absence predicted but Present
+                    aP <- sum( (!vecCont) &   presAbs  )
+                    ## Absence predicted and Absent
+                    aA <- sum( (!vecCont) & (!presAbs) )
+
+                    ## --------------------------  
+                    ## Sensitivity
+                    Sens <- pP / (pP + aP)
+                    ## --------------------------  
+                    ## Specificity
+                    Spe <- aA / (aA + pA)
+                    ## --------------------------  
+                    ## TSS
+                    TSS <- Sens + Spe - 1
+                    ## --------------------------  
+                    
+                    result <- c( tr1, tr2, Sens, Spe, TSS, pP, pA, aA, aP )
+                    return(result)
+                }
+                )
+            return(result)
+        }
+        )
+    result <- as.data.frame(t(result))
+    names(result) <- c("threshold1", "threshold2", "sensitivity", "specificity", "tss", "pP", "pA", "aA", "aP")
+    if (is.null(cont2)) {
+        result$threshold2 <- NA
+        thresh2 <- NA
+        dimension <- 1
+    } else {
+        dimension <- 2
+    }
+    class(result) <- "TSS"
+    attr(result, "link") <- link
+    attr(result, "largerPres1") <- largerPres1
+    attr(result, "largerPres2") <- largerPres2
+    attr(result, "threshold1") <- thresh1
+    attr(result, "threshold2") <- thresh2
+    attr(result, "dimension") <- dimension
+    return(result)
+}
+#+end_src
+
+** plot TSS
+:PROPERTIES:
+:tangle:   ./R/plot.TSS.R
+:no-expand: TRUE
+:comments: yes
+:END:
+#+begin_src R 
+##' Generic \code{plot} function for TSS Object
+##' 
+##' @param x object of class \code{TSS}
+##' @param ... further arguments for \code{plot} function
+##' 
+##' @export
+plot.TSS <- function(x, ...) {
+    if ( attr(x, "dimension")==1 ) {
+        plot(
+            x$sensitivity ~ x$threshold1,
+            ylim = c(-1, 1),
+            type = "l",
+            lty  = 1,
+            ylab = "Sensitivity | SPe | TSS",
+            main = "TSS et al"
+            )
+        lines(
+            x$specificity ~ x$threshold1,
+            lty=2
+            )
+        lines(
+            x$tss ~ x$threshold1,
+            lwd = 2,
+            col = 2
+            )
+        legend(
+            x      = "top",
+            legend = c("Sensitivity", "Specificity", "TSS"),
+            col    = c(1,1,2),
+            lwd    = c(1,1,2),
+            lty    = c(1,2,1)
+            )
+    }
+}
+#+end_src
+
+
+* src directory (./src)
+Not needed
+* TODO Tests
+* TODO Vignette
+* TODO Examples
+* package management                                               :noexport:
+** build package
+#+begin_src sh :results output
+R CMD build ./
+#+End_src
+
+#+RESULTS:
+
+
+** check package
+#+begin_src sh :results output 
+  R CMD check TSS_0.0-1.tar.gz
+#+end_src
+
+#+RESULTS:
+
+
+** INSTALL package
+#+begin_src sh :results output :var rckopts="--library=./Rlib"
+  R CMD INSTALL 
+#+end_src
+
+** load library
+#+begin_src :results output :var libname=(file-name-directory buffer-file-name)
+## customize the next line as needed: 
+.libPaths(new = file.path(getwd(),"Rlib") )
+require( basename(libname), character.only=TRUE)
+#+end_src
+
+** grep require( 
+
+- if you keep all your source code in this =.org= document, then you do not
+  need to do this - instead just type =C-s require(=
+- list package dependencies that might need to be dealt with
+
+#+begin_src sh :results output
+grep 'require(' R/*
+#+end_src
+
+#+RESULTS:
+
+
+* Package structure and src languages                              :noexport:
+
+- The top level directory may contain these files (and others):
+
+| filename    | filetype      |
+|-------------+---------------|
+| INDEX       | text          |
+| NAMESPACE   | R-like script |
+| configure   | Bourne shell  |
+| cleanup     | Bourne shell  |
+| LICENSE     | text          |
+| LICENCE     | text          |
+| COPYING     | text          |
+| NEWS        | text          |
+| DESCRIPTION | [[http://www.debian.org/doc/debian-policy/ch-controlfields.html][DCF]]           |
+|-------------+---------------|
+
+
+ 
+   and subdirectories
+| direname | types of files                                   |
+|----------+--------------------------------------------------|
+| R        | R                                                |
+| data     | various                                          |
+| demo     | R                                                |
+| exec     | various                                          |
+| inst     | various                                          |
+| man      | Rd                                               |
+| po       | poEdit                                           |
+| src      | .c, .cc or .cpp, .f, .f90, .f95, .m, .mm, .M, .h |
+| tests    | R, Rout                                          |
+|----------+--------------------------------------------------|
+|          |                                                  |
+   
+ [[info:emacs#Specifying%20File%20Variables][info:emacs#Specifying File Variables]]
