@@ -293,6 +293,8 @@ Extended to include evaluation of =tresh= range
 ##' smaller values.
 ##' @return A TSS object
 ##' @author Rainer M. Krug \email{Rainer@@krugs.de}
+##'
+##' @export
 TSSSingle <- function(
     cont,
     presAbs,
@@ -410,6 +412,8 @@ using two input variables, i.e. including interaction effects.
 ##' "`|`").
 ##' @return An object of class \code{TSS} TODO
 ##' @author Rainer M. Krug \email{Rainer@@krugs.de}
+##'
+##' @export
 TSS <- function(
     cont1,
     cont2 = NULL,
@@ -516,8 +520,14 @@ TSS <- function(
 :comments: yes
 :END:
 #+begin_src R 
+##' Generic \code{plot} function for TSS Object
+##' 
+##' @param x object of class \code{TSS}
+##' @param ... further arguments for \code{plot} function
+##' 
+##' @export
 plot.TSS <- function(x, ...) {
-    if ( is.na(attr(x, "threshold2")) ) {
+    if ( attr(x, "dimension")==1 ) {
         plot(
             x$sensitivity ~ x$threshold1,
             ylim = c(-1, 1),
@@ -571,7 +581,7 @@ R CMD build ./
 
 ** INSTALL package
 #+begin_src sh :results output :var rckopts="--library=./Rlib"
-  R CMD INSTALL $rckopts pkg
+  R CMD INSTALL 
 #+end_src
 
 ** load library

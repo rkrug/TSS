@@ -44,6 +44,8 @@
 ##' "`|`").
 ##' @return An object of class \code{TSS} TODO
 ##' @author Rainer M. Krug \email{Rainer@@krugs.de}
+##'
+##' @export
 TSS <- function(
     cont1,
     cont2 = NULL,

@@ -1,0 +1,3 @@
+S3method(plot,TSS)
+export(TSS)
+export(TSSSingle)

@@ -16,7 +16,7 @@ values and returns indicator values, which can be used toi
 identify the most suitable threshold value.
 
 \tabular{ll}{ Package: \tab TSS\cr Type: \tab Package\cr
-Version: \tab 0.1.0\cr Date: \tab 2014-02-23_15-46\cr
+Version: \tab 0.1.0\cr Date: \tab 2014-02-23_15-56\cr
 License: \tab GPL (>= 2)\cr LazyLoad: \tab yes\cr }
 }
 \author{

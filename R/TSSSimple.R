@@ -19,6 +19,8 @@
 ##' smaller values.
 ##' @return A TSS object
 ##' @author Rainer M. Krug \email{Rainer@@krugs.de}
+##'
+##' @export
 TSSSingle <- function(
     cont,
     presAbs,
