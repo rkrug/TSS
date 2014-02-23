@@ -104,10 +104,6 @@ Rscript -e "library(roxygen2);roxygenize('.', copy.package=FALSE, unlink.target=
 rm -f ./postTangleScript.sh
 #+end_src
 
-#+results:
-: Writing fireSim-package.Rd
-
-
 * gitignore file (./.gitignore)
 :PROPERTIES:
 :tangle: ./.gitignore
@@ -141,32 +137,12 @@ Complete version info
 #+end_src
 
 #+RESULTS:
-#+begin_example
-Version     :  0.0-1
-Commit date :  2013-06-27 14:23:54 +0200
-git HASH    :  a010ae604586dc03c491c5d05b530fd77a029c28
-git status  : 
-# On branch master
-# Changes not staged for commit:
-#   (use "git add <file>..." to update what will be committed)
-#   (use "git checkout -- <file>..." to discard changes in working directory)
-#
-#	modified:   .Rbuildignore
-#	modified:   .gitignore
-#	modified:   DESCRIPTION
-#	modified:   NAMESPACE
-#	modified:   R/fireBlockBurn.R
-#	modified:   fireSim-package.R
-#	modified:   fireSim.org
-#
-# Untracked files:
-#   (use "git add <file>..." to include in what will be committed)
-#
-#	R/seedDisp-package.R
-#	README
-#	man/
-no changes added to commit (use "git add" and/or "git commit -a")
-#+end_example
+: Version     :  0.1-0
+: Commit date :  2014-02-23 15:58:27 +0100
+: git HASH    :  6d29ee908f182cd0f68c0bccb227dcb9f47d55d9
+: git status  : 
+: # On branch master
+: nothing to commit, working directory clean
 
 
 
@@ -268,11 +244,8 @@ NULL
 :no-expand: TRUE
 :comments: yes
 :END:
-Adapted from [fn:7]:
-#+INCLUDE: ./TSS_function.R  src R :results output
-
 Extended to include evaluation of =tresh= range
-#+begin_src R :
+#+begin_src R
 ##' True skill statistic (TSS) Function
 ##' 
 ##' TSS is an index of the goodness-of- fit allowing to assess 
@@ -352,10 +325,6 @@ TSSSingle <- function(
 }
 #+end_src
 
-#+RESULTS:
-|   | x |
-|---+---|
-
 ** TSS
 :PROPERTIES:
 :tangle:   ./R/TSS.R
@@ -366,7 +335,7 @@ Extending the TSS to two continuous input variables.  The reasoning is
 to see if the prediction of presence/absence could be improved by
 using two input variables, i.e. including interaction effects.
 
-#+begin_src R :
+#+begin_src R
 ##' True skill statistic (TSS) Function
 ##' 
 ##' TSS is an index of the goodness-of- fit allowing to assess a how
@@ -509,10 +478,6 @@ TSS <- function(
 }
 #+end_src
 
-#+RESULTS:
-|   | x |
-|---+---|
-
 ** plot TSS
 :PROPERTIES:
 :tangle:   ./R/plot.TSS.R
@@ -585,7 +550,7 @@ R CMD build ./
 #+end_src
 
 ** load library
-#+begin_src R :session :results output :var libname=(file-name-directory buffer-file-name)
+#+begin_src :results output :var libname=(file-name-directory buffer-file-name)
 ## customize the next line as needed: 
 .libPaths(new = file.path(getwd(),"Rlib") )
 require( basename(libname), character.only=TRUE)
