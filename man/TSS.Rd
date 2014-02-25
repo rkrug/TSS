@@ -6,7 +6,7 @@ TSS(cont1, cont2 = NULL, presAbs, thresh1, thresh2, largerPres1 = TRUE,
   largerPres2 = FALSE, link = `&`)
 }
 \arguments{
-  \item{cont1}{\code{vector} of simulation of any
+  \item{cont1,}{\code{vector} of simulation of any
   continuous variable which has been choosen as a primary
   proxy of fitness}
 

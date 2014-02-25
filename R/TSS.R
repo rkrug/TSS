@@ -24,7 +24,7 @@
 ##' same size)
 ##' 
 ##' @title True skill statistic
-##' @param cont1 \code{vector} of simulation of any continuous variable
+##' @param cont1, \code{vector} of simulation of any continuous variable
 ##' which has been choosen as a primary proxy of fitness
 ##' @param cont2 \code{vector} of simulation of any continuous variable
 ##' which has been choosen as a secondary proxy of fitness. If \code{is.null(cont2)}, a simple TSS is calculated.
