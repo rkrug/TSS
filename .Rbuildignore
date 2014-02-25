@@ -4,6 +4,8 @@
 library
 version
 postTangleScript.sh
+^TSS.
+README*
 
 ;; Local Variables:
 ;; org-babel-tangled-file: t

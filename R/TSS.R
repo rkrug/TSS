@@ -68,75 +68,97 @@ TSS <- function(
         cont2 <- cont2[sel]
         presAbs <- presAbs[sel]
     }
+    thresh <- expand.grid(thresh1, thresh2)
     ##
-    result <- sapply(
-        thresh1,
-        function(tr1) {
-            result <- sapply(
-                thresh2,
-                function(tr2) {
-                    ## Classify cont1 and cont2 into absence (< tr)
-                    ## and presence (>= tr) depending on largerPres1
-                    ## and largerPres2
-                    if (largerPres1) {
-                        vecCont1 <- cont1 >= tr1
-                    } else {
-                        vecCont1 <- cont1 <= tr1                        
-                    }
-                    if (!is.null(cont2)) {
-                        if (largerPres2) {
-                            vecCont2 <- cont2 >= tr2
-                        } else {
-                            vecCont2 <- cont2 <= tr2                        
-                        }
-                        ## Combine vecCont1 and vecCont2 using "link"
-                        vecCont <- link(vecCont1, vecCont2)
-                    } else {
-                        vecCont <- vecCont1
-                    }
-                    ## Presence predicted and Present
-                    pP <- sum(   vecCont &    presAbs  )
-                    ## Presence predicted but absent
-                    pA <- sum(   vecCont  & (!presAbs) )
-                    ## Absence predicted but Present
-                    aP <- sum( (!vecCont) &   presAbs  )
-                    ## Absence predicted and Absent
-                    aA <- sum( (!vecCont) & (!presAbs) )
+    n <- sum(presAbs) + sum(!presAbs)
+    n2 <- n^2
 
-                    ## --------------------------  
-                    ## Sensitivity
-                    Sens <- pP / (pP + aP)
-                    ## --------------------------  
-                    ## Specificity
-                    Spe <- aA / (aA + pA)
-                    ## --------------------------  
-                    ## TSS
-                    TSS <- Sens + Spe - 1
-                    ## --------------------------  
-                    
-                    result <- c( tr1, tr2, Sens, Spe, TSS, pP, pA, aA, aP )
-                    return(result)
-                }
-                )
-            return(result)
-        }
+    no <- rep(NA, nrow(thresh))
+    result <- list(
+        threshold1 = no,
+        threshold2 = no,
+        overallAccuracy = no,
+        sensitivity = no,
+        specificity = no,
+        tss = no,
+        kappa = no,
+        pP = no,
+        pA = no,
+        aA = no,
+        aP = no,
+        n = n
         )
-    result <- as.data.frame(t(result))
-    names(result) <- c("threshold1", "threshold2", "sensitivity", "specificity", "tss", "pP", "pA", "aA", "aP")
-    if (is.null(cont2)) {
-        result$threshold2 <- NA
-        thresh2 <- NA
-        dimension <- 1
-    } else {
-        dimension <- 2
+    
+    
+    for ( i in 1:nrow(thresh)) {
+        ## Classify cont1 and cont2 into absence (< tr)
+        ## and presence (>= tr) depending on largerPres1
+        ## and largerPres2
+        result$threshold1[i] <- thresh[i, 1]
+        if (largerPres1) {
+            vecCont1 <- cont1 >= thresh[i, 1]
+        } else {
+            vecCont1 <- cont1 <= thresh[i, 1]                       
+        }
+        if (!is.null(cont2)) {
+            if (largerPres2) {
+                vecCont2 <- cont2 >= thresh[i, 2]
+            } else {
+                vecCont2 <- cont2 <= thresh[i, 2]                   
+            }
+            ## Combine vecCont1 and vecCont2 using "link"
+            vecCont <- link(vecCont1, vecCont2)
+            result$threshold2[i] <- thresh[i, 2]
+        } else {
+            vecCont <- vecCont1
+        }
+        
+        ## Presence predicted and Present
+        pP <- sum(   vecCont  &   presAbs  ) # a
+        result$pP[i] <- pP
+        ## Presence predicted but absent
+        pA <- sum(   vecCont  & (!presAbs) ) # b
+        result$pA[i] <- pA
+        ## Absence predicted but Present
+        aP <- sum( (!vecCont) &   presAbs  ) # c
+        result$aP[i] <- aP
+        ## Absence predicted and Absent
+        aA <- sum( (!vecCont) & (!presAbs) ) # d
+        result$aA[i] <- aA
+
+        ## --------------------------  
+        ## Sensitivity
+        Sens <- pP / (pP + aP)
+        result$sensitivity[i] <- Sens
+        ## --------------------------  
+        ## Specificity
+        Spe <- aA / (aA + pA)
+        result$specificity[i] <- Spe
+        ## --------------------------  
+        ## TSS
+        TSS <- Sens + Spe - 1
+        result$tss[i] <- TSS
+        ## --------------------------  
+        ## Overall Accuracy
+        ovAc <- (aA + pP) / n
+        result$overallAccuracy[i] <- ovAc
+        ## --------------------------  
+        ## kappa
+        ## Should this be implemented?
+        t1 <- (pP + aA) / n
+        t2 <- ( (pP + pA)*(pP + aP)+(aP + aA)*( aA + pA) ) / n2
+        kap <- (t1 - t2) / (1 - t2)
+        result$kappa[i] <- kap
+        ## --------------------------  
     }
+    ##
     class(result) <- "TSS"
     attr(result, "link") <- link
     attr(result, "largerPres1") <- largerPres1
     attr(result, "largerPres2") <- largerPres2
     attr(result, "threshold1") <- thresh1
     attr(result, "threshold2") <- thresh2
-    attr(result, "dimension") <- dimension
+    attr(result, "dimension") <- ifelse(is.null(cont2), 1, 2)
     return(result)
 }
 ## TSS:1 ends here

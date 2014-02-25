@@ -2,35 +2,38 @@
 ##' Generic \code{plot} function for TSS Object
 ##' 
 ##' @param x object of class \code{TSS}
+##' @param columns columns to include in the plot
 ##' @param ... further arguments for \code{plot} function
 ##' 
 ##' @export
-plot.TSS <- function(x, ...) {
+plot.TSS <- function(x, columns = c("tss", "sensitivity", "specificity"), ...) {
     if ( attr(x, "dimension")==1 ) {
+        cols <- c("red", "green", "blue", "brown", "black")
+        ## columns <- c("kappa", "overallAccuracy", "specificity", "sensitivity", "tss")
         plot(
-            x$sensitivity ~ x$threshold1,
+            x[[columns[1]]] ~ x$threshold1,
             ylim = c(-1, 1),
             type = "l",
             lty  = 1,
+            col  = cols[1],
             ylab = "Sensitivity | SPe | TSS",
-            main = "TSS et al"
+            main = "TSS et al",
+            ...
             )
-        lines(
-            x$specificity ~ x$threshold1,
-            lty=2
-            )
-        lines(
-            x$tss ~ x$threshold1,
-            lwd = 2,
-            col = 2
-            )
+        for (i in 2:length(columns)) {
+            lines(
+                x[[columns[i]]] ~ x$threshold1,
+                lty = i,
+                col = cols[i]
+                )
+        }
         legend(
             x      = "top",
-            legend = c("Sensitivity", "Specificity", "TSS"),
-            col    = c(1,1,2),
-            lwd    = c(1,1,2),
-            lty    = c(1,2,1)
+            legend = columns,
+            col    = cols[1:length(columns)],
+            lty    = 1:length(columns)
             )
+        invisible()
     }
 }
 ## plot\ TSS:1 ends here

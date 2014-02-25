@@ -8,4 +8,6 @@ TSS.*
 TSS.org~
 *.o
 *.so
-*.rds                                                                                                                                                                                                                                                                                                                                                                                                     
+*.rds                
+/postTangleScript.sh
+/TSS.org_archive

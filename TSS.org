@@ -67,7 +67,7 @@ Org-babel support for building
 #+PROPERTY: padline no
 #+PROPERTY: mkdirp yes
 #+PROPERTY: var MAJORVERSION=0
-#+PROPERTY: var+ MINORVERSION=1
+#+PROPERTY: var+ MINORVERSION=2
 #+PROPERTY: var+ PATCHVERSION=0
 #+PROPERTY: var+ GITHASH="testhash" 
 #+PROPERTY: var+ GITCOMMITDATE="testdate"
@@ -104,6 +104,9 @@ Rscript -e "library(roxygen2);roxygenize('.', copy.package=FALSE, unlink.target=
 rm -f ./postTangleScript.sh
 #+end_src
 
+#+RESULTS:
+
+
 * gitignore file (./.gitignore)
 :PROPERTIES:
 :tangle: ./.gitignore
@@ -123,7 +126,9 @@ TSS.*
 TSS.org~
 ,*.o
 ,*.so
-,*.rds                                                                                                                                                                                                                                                                                                                                                                                                     
+,*.rds                
+/postTangleScript.sh
+/TSS.org_archive
 #+end_src
 
 * Git Revision info
@@ -146,7 +151,7 @@ Complete version info
 
 
 
-* Rbuildignore file (./.Rbuildignore)
+* TODO Rbuildignore file (./.Rbuildignore)
 :PROPERTIES:
 :tangle: ./.Rbuildignore
 :comments: no
@@ -161,6 +166,8 @@ Complete version info
 library
 version
 postTangleScript.sh
+^TSS.
+README*
 #+end_src
 
 
@@ -213,14 +220,20 @@ LazyLoad: yes
 ##'
 ##' TSS is an index of the goodness-of- fit allowing to assess a how
 ##' much a continuous variable simulated by any model fit
-##' presence/absence data. It thus allows to translate a map of any
-##' continuous variable into a map of presence/absence for a given set
-##' of spatial simulations. This is made possible by finding the
-##' threshold value of the continuous variable.
+##' presence/absence data, details can be found in Allouche et al,
+##' 2006. It allows to translate a map of any continuous variable into
+##' a map of presence/absence for a given set of spatial
+##' simulations. This is made possible by finding the threshold value
+##' of the continuous variable.
 ##'
 ##' The TSS function loops over a wide range of threshold values and
-##' returns indicator values, which can be used toi identify the most
+##' returns indicator values, which can be used to identify the most
 ##' suitable threshold value.
+##'
+##' Allouche, O., Tsoar, A., & Kadmon, R. (2006). Assessing the
+##' accuracy of species distribution models: prevalence, kappa and the
+##' true skill statistic (TSS). Journal of Applied Ecology, 43(6),
+##' 1223--1232. doi:10.1111/j.1365-2664.2006.01214.x
 ##' 
 ##' \tabular{ll}{
 ##' Package: \tab TSS\cr
@@ -237,94 +250,8 @@ LazyLoad: yes
 NULL
 #+end_src
 
+
 * R directory (./R)
-** Simple TSS 
-:PROPERTIES:
-:tangle:   ./R/TSSSimple.R
-:no-expand: TRUE
-:comments: yes
-:END:
-Extended to include evaluation of =tresh= range
-#+begin_src R
-##' True skill statistic (TSS) Function
-##' 
-##' TSS is an index of the goodness-of- fit allowing to assess 
-##' a how much a continuous variable simulated by any model fit presence ??? absence data.
-##' It thus allows to translate a map of any continuous variable into a map of  presence/absence 
-##' for a given set of spatial simulation at the species level.
-##' This is made possible by finding the threshold value of the 
-##' continuous variable used as a procxy of fitness (e.g. growth, productivity..) 
-##' Therefore One must loop the function over a wide range of threshold to find the optimal one.
-##' Note that cont and vec ref must match spatially (same ranking and same size)
-##' 
-##' @title True skill statistic
-##' @param cont \code{vector} of simulation of any continuous variable which has been choosen as a proxy of fitness
-##' @param presAbs \code{vector} of presence/absence data, can be logical
-##' @param thresh \code{vector} containig the reshold value in the same unit as cont
-##' @param largerPres if \code{TRUE} the \code{cont} values larger
-##' then the threshold are considered as presence, if \code{FALSE}
-##' smaller values.
-##' @return A TSS object
-##' @author Rainer M. Krug \email{Rainer@@krugs.de}
-##'
-##' @export
-TSSSingle <- function(
-    cont,
-    presAbs,
-    thresh,
-    largerPres = TRUE
-    ) {
-    presAbs <- as.logical(presAbs)
-    ## exclude where cont pr verref is NA
-    sel <- (!is.na(cont)) & (!is.na(presAbs))
-    cont <- cont[sel]
-    presAbs <- presAbs[sel]
-    ##
-    result <- sapply(
-        thresh,
-        function(tr) {
-
-            ## Classify cont into absence (< tr) and presence (>= tr)
-            if (largerPres) {
-                vecCont <- cont >= tr
-            } else {
-                vecCont <- cont <= tr
-            }
-            ## Presence predicted and Present
-            pP <- sum(   vecCont  &   presAbs  )
-            ## Presence predicted but Absent
-            pA <- sum(   vecCont  & (!presAbs) )
-            ## Absence predicted but Presence
-            aP <- sum( (!vecCont) &   presAbs  )
-            ## Absence predicted and Absent
-            aA <- sum( (!vecCont) & (!presAbs) )
-            
-            ## Sensitivity
-            Sens <- pP / (pP + aP)
-            
-            ## Specificity
-            Spe <- aA / (aA + pA)
-            
-            ## TSS
-            TSS <- Sens + Spe - 1
-            
-            result=c(tr, NA, Sens, Spe, TSS, pP, pA, aA, aP)
-            return(result)
-        }
-        )
-    result <- as.data.frame(t(result))
-    names(result) <- c("threshold1", "threshold2", "sensitivity", "specificity", "tss", "pP", "pA", "aA", "aP")
-    class(result) <- "TSS"
-    attr(result, "link") <- NA
-    attr(result, "largerPres1") <- largerPres
-    attr(result, "largerPres2") <- NA
-    attr(result, "threshold1") <- thresh
-    attr(result, "threshold2") <- NA
-    attr(result, "dimension") <- 1
-    return(result)
-}
-#+end_src
-
 ** TSS
 :PROPERTIES:
 :tangle:   ./R/TSS.R
@@ -405,80 +332,105 @@ TSS <- function(
         cont2 <- cont2[sel]
         presAbs <- presAbs[sel]
     }
+    thresh <- expand.grid(thresh1, thresh2)
     ##
-    result <- sapply(
-        thresh1,
-        function(tr1) {
-            result <- sapply(
-                thresh2,
-                function(tr2) {
-                    ## Classify cont1 and cont2 into absence (< tr)
-                    ## and presence (>= tr) depending on largerPres1
-                    ## and largerPres2
-                    if (largerPres1) {
-                        vecCont1 <- cont1 >= tr1
-                    } else {
-                        vecCont1 <- cont1 <= tr1                        
-                    }
-                    if (!is.null(cont2)) {
-                        if (largerPres2) {
-                            vecCont2 <- cont2 >= tr2
-                        } else {
-                            vecCont2 <- cont2 <= tr2                        
-                        }
-                        ## Combine vecCont1 and vecCont2 using "link"
-                        vecCont <- link(vecCont1, vecCont2)
-                    } else {
-                        vecCont <- vecCont1
-                    }
-                    ## Presence predicted and Present
-                    pP <- sum(   vecCont &    presAbs  )
-                    ## Presence predicted but absent
-                    pA <- sum(   vecCont  & (!presAbs) )
-                    ## Absence predicted but Present
-                    aP <- sum( (!vecCont) &   presAbs  )
-                    ## Absence predicted and Absent
-                    aA <- sum( (!vecCont) & (!presAbs) )
+    n <- sum(presAbs) + sum(!presAbs)
+    n2 <- n^2
 
-                    ## --------------------------  
-                    ## Sensitivity
-                    Sens <- pP / (pP + aP)
-                    ## --------------------------  
-                    ## Specificity
-                    Spe <- aA / (aA + pA)
-                    ## --------------------------  
-                    ## TSS
-                    TSS <- Sens + Spe - 1
-                    ## --------------------------  
-                    
-                    result <- c( tr1, tr2, Sens, Spe, TSS, pP, pA, aA, aP )
-                    return(result)
-                }
-                )
-            return(result)
-        }
+    no <- rep(NA, nrow(thresh))
+    result <- list(
+        threshold1 = no,
+        threshold2 = no,
+        overallAccuracy = no,
+        sensitivity = no,
+        specificity = no,
+        tss = no,
+        kappa = no,
+        pP = no,
+        pA = no,
+        aA = no,
+        aP = no,
+        n = n
         )
-    result <- as.data.frame(t(result))
-    names(result) <- c("threshold1", "threshold2", "sensitivity", "specificity", "tss", "pP", "pA", "aA", "aP")
-    if (is.null(cont2)) {
-        result$threshold2 <- NA
-        thresh2 <- NA
-        dimension <- 1
-    } else {
-        dimension <- 2
+    
+    
+    for ( i in 1:nrow(thresh)) {
+        ## Classify cont1 and cont2 into absence (< tr)
+        ## and presence (>= tr) depending on largerPres1
+        ## and largerPres2
+        result$threshold1[i] <- thresh[i, 1]
+        if (largerPres1) {
+            vecCont1 <- cont1 >= thresh[i, 1]
+        } else {
+            vecCont1 <- cont1 <= thresh[i, 1]                       
+        }
+        if (!is.null(cont2)) {
+            if (largerPres2) {
+                vecCont2 <- cont2 >= thresh[i, 2]
+            } else {
+                vecCont2 <- cont2 <= thresh[i, 2]                   
+            }
+            ## Combine vecCont1 and vecCont2 using "link"
+            vecCont <- link(vecCont1, vecCont2)
+            result$threshold2[i] <- thresh[i, 2]
+        } else {
+            vecCont <- vecCont1
+        }
+        
+        ## Presence predicted and Present
+        pP <- sum(   vecCont  &   presAbs  ) # a
+        result$pP[i] <- pP
+        ## Presence predicted but absent
+        pA <- sum(   vecCont  & (!presAbs) ) # b
+        result$pA[i] <- pA
+        ## Absence predicted but Present
+        aP <- sum( (!vecCont) &   presAbs  ) # c
+        result$aP[i] <- aP
+        ## Absence predicted and Absent
+        aA <- sum( (!vecCont) & (!presAbs) ) # d
+        result$aA[i] <- aA
+
+        ## --------------------------  
+        ## Sensitivity
+        Sens <- pP / (pP + aP)
+        result$sensitivity[i] <- Sens
+        ## --------------------------  
+        ## Specificity
+        Spe <- aA / (aA + pA)
+        result$specificity[i] <- Spe
+        ## --------------------------  
+        ## TSS
+        TSS <- Sens + Spe - 1
+        result$tss[i] <- TSS
+        ## --------------------------  
+        ## Overall Accuracy
+        ovAc <- (aA + pP) / n
+        result$overallAccuracy[i] <- ovAc
+        ## --------------------------  
+        ## kappa
+        ## Should this be implemented?
+        t1 <- (pP + aA) / n
+        t2 <- ( (pP + pA)*(pP + aP)+(aP + aA)*( aA + pA) ) / n2
+        kap <- (t1 - t2) / (1 - t2)
+        result$kappa[i] <- kap
+        ## --------------------------  
     }
+    ##
     class(result) <- "TSS"
     attr(result, "link") <- link
     attr(result, "largerPres1") <- largerPres1
     attr(result, "largerPres2") <- largerPres2
     attr(result, "threshold1") <- thresh1
     attr(result, "threshold2") <- thresh2
-    attr(result, "dimension") <- dimension
+    attr(result, "dimension") <- ifelse(is.null(cont2), 1, 2)
     return(result)
 }
+
 #+end_src
 
-** plot TSS
+#+RESULTS:
+
+** TODO plot TSS
 :PROPERTIES:
 :tangle:   ./R/plot.TSS.R
 :no-expand: TRUE
@@ -488,45 +440,52 @@ TSS <- function(
 ##' Generic \code{plot} function for TSS Object
 ##' 
 ##' @param x object of class \code{TSS}
+##' @param columns columns to include in the plot
 ##' @param ... further arguments for \code{plot} function
 ##' 
 ##' @export
-plot.TSS <- function(x, ...) {
+plot.TSS <- function(x, columns = c("tss", "sensitivity", "specificity"), ...) {
     if ( attr(x, "dimension")==1 ) {
+        cols <- c("red", "green", "blue", "brown", "black")
+        ## columns <- c("kappa", "overallAccuracy", "specificity", "sensitivity", "tss")
         plot(
-            x$sensitivity ~ x$threshold1,
+            x[[columns[1]]] ~ x$threshold1,
             ylim = c(-1, 1),
             type = "l",
             lty  = 1,
+            col  = cols[1],
             ylab = "Sensitivity | SPe | TSS",
-            main = "TSS et al"
+            main = "TSS et al",
+            ...
             )
-        lines(
-            x$specificity ~ x$threshold1,
-            lty=2
-            )
-        lines(
-            x$tss ~ x$threshold1,
-            lwd = 2,
-            col = 2
-            )
+        for (i in 2:length(columns)) {
+            lines(
+                x[[columns[i]]] ~ x$threshold1,
+                lty = i,
+                col = cols[i]
+                )
+        }
         legend(
             x      = "top",
-            legend = c("Sensitivity", "Specificity", "TSS"),
-            col    = c(1,1,2),
-            lwd    = c(1,1,2),
-            lty    = c(1,2,1)
+            legend = columns,
+            col    = cols[1:length(columns)],
+            lty    = 1:length(columns)
             )
+        invisible()
     }
 }
 #+end_src
 
+#+RESULTS:
+
 
 * src directory (./src)
 Not needed
+
 * TODO Tests
 * TODO Vignette
 * TODO Examples
+
 * package management                                               :noexport:
 ** build package
 #+begin_src sh :results output
@@ -534,17 +493,22 @@ R CMD build ./
 #+End_src
 
 #+RESULTS:
+: * checking for file './DESCRIPTION' ... OK
+: * preparing 'TSS':
+: * checking DESCRIPTION meta-information ... OK
+: * checking for LF line-endings in source and make files
+: * checking for empty or unneeded directories
+: * building 'TSS_0.1-0.tar.gz'
 
 
 ** check package
 #+begin_src sh :results output 
-  R CMD check TSS_0.0-1.tar.gz
+  R CMD check ./TSS_0.0-1.tar.gz
 #+end_src
 
 #+RESULTS:
 
-
-** INSTALL package
+** Instal package
 #+begin_src sh :results output :var rckopts="--library=./Rlib"
   R CMD INSTALL 
 #+end_src
@@ -604,3 +568,16 @@ grep 'require(' R/*
 |          |                                                  |
    
  [[info:emacs#Specifying%20File%20Variables][info:emacs#Specifying File Variables]]
+
+
+* TODOs
+** TODO Improve plot.TSS
+- [ ] The following should be added:
+  - [ ] Add plotting for two dimensions
+  - [ ] Add plotting of kappa and overallAccuracy
+  - [ ] Add argument to select measures to be plotted (default: sensitivity,
+    specificity, TSS)
+SCHEDULED: <2014-02-23 Sun 21:07>
+DEADLINE:  <2014-02-23 Sun 21:07>
+- link     :: [[file:~/Documents/Projects/R-Packages/TSS/TSS.org::*plot%20TSS][plot TSS]] 
+- author   :: Rainer M Krug, email: Rainer@krugs.de
