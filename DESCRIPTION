@@ -2,7 +2,7 @@ Package: TSS
 Type: Package
 Title: Basic and extended TSS Statistics (True Skill Statistics)
 Version: 0.3-0
-Date: 2014-02-25_17-55
+Date: 2014-03-07_15-43
 Author: Rainer M. Krug
 Maintainer: Rainer M Krug <Rainer@krugs.de>
 Description: This packag implements the True Skills Statistic (TSS) as well as

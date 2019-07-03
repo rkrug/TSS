@@ -21,7 +21,7 @@
 ##' Package: \tab TSS\cr
 ##' Type: \tab Package\cr
 ##' Version: \tab  0.3.0\cr
-##' Date: \tab 2014-02-25_17-55\cr
+##' Date: \tab 2014-03-07_15-43\cr
 ##' License: \tab GPL (>= 2)\cr
 ##' LazyLoad: \tab yes\cr
 ##' }
@@ -29,6 +29,7 @@
 ##' @name TSS-package
 ##' @docType package
 ##' @author Rainer M Krug \email{Rainer@@krugs.de}
+##' @import lattice
 NULL
 
 ## Local Variables:

@@ -23,7 +23,7 @@ Ecology, 43(6), 1223--1232.
 doi:10.1111/j.1365-2664.2006.01214.x
 
 \tabular{ll}{ Package: \tab TSS\cr Type: \tab Package\cr
-Version: \tab 0.3.0\cr Date: \tab 2014-02-25_17-55\cr
+Version: \tab 0.3.0\cr Date: \tab 2014-03-07_15-43\cr
 License: \tab GPL (>= 2)\cr LazyLoad: \tab yes\cr }
 }
 \author{

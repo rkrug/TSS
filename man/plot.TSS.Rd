@@ -3,22 +3,27 @@
 \title{Generic \code{plot} function for TSS Object}
 \usage{
 \method{plot}{TSS}(x, columns = c("tss", "sensitivity", "specificity"),
-  column.col, ...)
+  column.col, ylab, main = NULL, ...)
 }
 \arguments{
-  \item{x}{object of class \code{TSS}}
+  \item{x}{object of class \code{TSS} to be plotted}
 
-  \item{columns}{columns to include in the plot}
+  \item{columns}{names of columns to be plotted from
+  \code{x}}
 
-  \item{column.col}{colours to be used for plotting. If not
-  provided, \code{rainbow(length(columns))} is used}
+  \item{column.col}{colours for each column to be plotted.
+  Default is \code{rainbow(length(columns))}}
 
-  \item{...}{further arguments for the actual plotting. In
-  case of a one dimensionsl TSS, i.e. \code{attr(x,
-  "dimension")==1}, the \code{plot} function is used, in
-  case of a two dimensionsl TSS, i.e. \code{attr(x,
-  "dimension")==2} the function \code{wireframe} from the
-  package \code{lattice} is used.}
+  \item{ylab}{y-axis label. Default is paste(columns,
+  collapse=" | ")}
+
+  \item{main}{main caption of the plot. Default is NULL}
+
+  \item{...}{additional objects for plot functions. For 1D
+  TSS (\code{attr(x, "dimension")==1}) for the
+  \code{plot()} function is used, for the 2D (\code{attr(x,
+  "dimension")==2}) the \code{wireframe()} function from
+  the package \code{lattice} isd used.}
 }
 \description{
 Generic \code{plot} function for TSS Object
